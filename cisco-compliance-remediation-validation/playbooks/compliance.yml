@@ -1,9 +1,0 @@
----
-- name: Compliance Check for NTP server settings
-  hosts: core, access
-  gather_facts: false
-
-  tasks:
-    - name: load ntp role
-      include_role:
-        name: ../roles/ntp

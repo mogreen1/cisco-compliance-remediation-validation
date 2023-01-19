@@ -1,9 +1,0 @@
----
-- name: Configure '{{rtr}}'
-  hosts: "{{rtr}}"
-  gather_facts: false
-
-  tasks:
-  - name: load rtrconfig role
-    include_role:
-      name: ../roles/rtrconfig

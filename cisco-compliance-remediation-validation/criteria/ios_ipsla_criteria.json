@@ -1,9 +1,0 @@
-{
-"type": "object",
-"patternProperties": {
-         "^.*": {
-                 "type": "object",
-                 "properties": {
-                     "return_code":  {
-                           "type":"string",
-                           "pattern": "OK" }}}}} 

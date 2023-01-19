@@ -1,8 +1,0 @@
-{#
-  BGP
-#}
-router bgp {{ local_as }}
-!
- address-family ipv4
-  network {{ remote_ip }} mask 255.255.255.255
- exit-address-family
