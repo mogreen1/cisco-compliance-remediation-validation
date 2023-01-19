@@ -1,0 +1,11 @@
+---
+- name: Save the Intended_config
+  hosts: 
+  - backup-servers
+  - cisco_only
+  gather_facts: false
+
+  tasks:
+  - name: load intended_config role
+    include_role:
+      name: ../roles/intended_config

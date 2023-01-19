@@ -1,0 +1,16 @@
+---
+- name: Check for configuration drift 
+  hosts: 
+  - cisco_only
+  - backup-server
+  gather_facts: false
+  vars_files:
+  - "../vars/rtrs.yml"
+
+  tasks:
+  - name: load config_management role
+    include_role:
+      name: ../roles/config_management
+
+ 
+

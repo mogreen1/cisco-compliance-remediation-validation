@@ -1,0 +1,311 @@
+---
+- name: Playbook to configure ansible controller post installation
+  hosts: localhost
+  connection: local
+  vars_files: vars/vars.yml
+  
+  tasks:
+
+  - name: Add EE to the controller instance
+    ansible.controller.execution_environment:
+      name: "cisco-ee"
+      image: docker.io/andubiel/cisco-ee
+      pull: missing
+      controller_host: "{{host}}"
+      controller_username: "{{username}}"
+      controller_password: "{{password}}"
+  
+  - name: Add EE to the controller instance
+    ansible.controller.execution_environment:
+      name: "common-network-ee"
+      image: registry.gitlab.com/tdubiel1/common-network-ee:latest
+      pull: missing
+      controller_host: "{{host}}"
+      controller_username: "{{username}}"
+      controller_password: "{{password}}"
+
+  - name: Add inventory
+    ansible.controller.inventory:
+      name: Workshop Inventory
+      controller_host: "{{host}}"
+      controller_username: "{{username}}"
+      controller_password: "{{password}}"
+      organization: Default
+      state: present
+      validate_certs: no
+
+  - name: Add group
+    ansible.controller.group:
+      name: core
+      inventory: Workshop Inventory
+      preserve_existing_hosts: True
+      controller_host: "{{host}}"
+      controller_username: "{{username}}"
+      controller_password: "{{password}}"
+      validate_certs: no
+
+  - name: Add group
+    ansible.controller.group:
+      name: core
+      inventory: Workshop Inventory
+      hosts:
+      - rtr1
+      - rtr2
+      preserve_existing_hosts: True
+      controller_host: "{{host}}"
+      controller_username: "{{username}}"
+      controller_password: "{{password}}"
+      validate_certs: no
+
+  - name: Add group
+    ansible.controller.group:
+      name: cisco_only
+      inventory: Workshop Inventory
+      preserve_existing_hosts: True
+      controller_host: "{{host}}"
+      controller_username: "{{username}}"
+      controller_password: "{{password}}"
+      validate_certs: no
+
+  - name: Add group
+    ansible.controller.group:
+      name: cisco_only
+      inventory: Workshop Inventory
+      hosts:
+      - rtr1
+      - rtr2
+      - rtr3
+      - rtr4
+      preserve_existing_hosts: True
+      controller_host: "{{host}}"
+      controller_username: "{{username}}"
+      controller_password: "{{password}}"
+      validate_certs: no
+
+
+  - name: create projects
+    ansible.controller.project:
+      name: Cisco_Compliance_Remediate_Diff_Validate
+      organization: Red Hat network organization
+      scm_url: https://gitlab.com/redhatautomation/cisco-compliance-remediation-validation.git
+      scm_type: git
+      state: present
+      scm_update_on_launch: yes
+      validate_certs: false
+      controller_host: "{{host}}"
+      controller_username: "{{username}}"
+      controller_password: "{{password}}"
+
+  - name: create projects
+    ansible.controller.project:
+      name: network-stig-demo
+      organization: Red Hat network organization
+      scm_url: https://gitlab.com/tdubiel1/network-stig-demo.git
+      scm_type: git
+      state: present
+      scm_update_on_launch: yes
+      validate_certs: false
+      controller_host: "{{host}}"
+      controller_username: "{{username}}"
+      controller_password: "{{password}}"
+
+  - name:
+    ansible.controller.job_template:
+      name: "{{item.name}}"
+      controller_host: "{{host}}"
+      controller_username: "{{username}}"
+      controller_password: "{{password}}"
+      project: "{{item.project}}"
+      execution_environment: "{{item.execution_environment}}"
+      inventory: "{{item.inventory}}"
+      playbook: "{{item.playbook}}"
+      credentials: "{{item.credentials}}"
+      diff_mode_enabled: yes
+      validate_certs: no
+    loop: "{{templates}}"
+  
+
+  - name: check workflow
+    ansible.controller.workflow_job_template:
+      name: "Cisco-STIG-Remediation-Workflow"
+      organization: "Red Hat network organization"
+      state: present
+      survey_spec: {
+                        "description": "",
+                        "name": "",
+                        "spec": [
+                            {
+                                "choices": "yes\nno",
+                                "default": "",
+                                "formattedChoices": [
+                                    {
+                                        "choice": "yes",
+                                        "id": 0,
+                                        "isDefault": false
+                                    },
+                                    {
+                                        "choice": "no",
+                                        "id": 1,
+                                        "isDefault": false
+                                    },
+                                ],
+                                "max": 1024,
+                                "min": 0,
+                                "new_question": false,
+                                "question_description": "",
+                                "question_name": 'Do you want to run the Compliance in Check mode "yes" or "no" for Auto Remediate?',
+                                "required": true,
+                                "type": "multiplechoice",
+                                "variable": "check"
+                            },
+                            {
+                                "choices": "rtr4",
+                                "default": "rtr4",
+                                "formattedChoices": [
+                                    {
+                                        "choice": "rtr4",
+                                        "id": 0,
+                                        "isDefault": true
+                                    }
+                                ],
+                                "max": 1024,
+                                "min": 0,
+                                "new_question": false,
+                                "question_description": "",
+                                "question_name": "New Remote Router Name",
+                                "required": true,
+                                "type": "multiplechoice",
+                                "variable": "rtr"
+                            },
+                            {
+                                "choices": "rtr2",
+                                "default": "rtr2",
+                                "formattedChoices": [
+                                    {
+                                        "choice": "rtr2",
+                                        "id": 0,
+                                        "isDefault": true
+                                    }
+                                ],
+                                "max": 1024,
+                                "min": 0,
+                                "new_question": false,
+                                "question_description": "",
+                                "question_name": "Connected Core Router Name",
+                                "required": true,
+                                "type": "multiplechoice",
+                                "variable": "core"
+                            },
+                            {
+                                "choices": "192.168.4.4",
+                                "default": "192.168.4.4",
+                                "max": 1024,
+                                "min": 0,
+                                "new_question": true,
+                                "question_description": "",
+                                "question_name": "Router ID",
+                                "required": true,
+                                "type": "multiplechoice",
+                                "variable": "router_id"
+                            },
+                            {
+                                "choices": "10.101.101.4",
+                                "default": "10.101.101.4",
+                                "max": 1024,
+                                "min": 0,
+                                "new_question": true,
+                                "question_description": "",
+                                "question_name": "Tunnel0 IP Address",
+                                "required": true,
+                                "type": "multiplechoice",
+                                "variable": "tunnel0_ip"
+                            },
+                             {
+                                "choices": "['192.0.2.0', '192.0.2.2']",
+                                "default": "['192.0.2.0', '192.0.2.2']",
+                                "max": 1024,
+                                "min": 0,
+                                "new_question": true,
+                                "question_description": "",
+                                "question_name": "NTP Servers",
+                                "required": true,
+                                "type": "multiplechoice",
+                                "variable": "ntp_servers"
+                            }
+                        ]
+                    }
+      survey_enabled: yes              
+      validate_certs: false
+      controller_host: "{{host}}"
+      controller_username: "{{username}}"
+      controller_password: "{{password}}"
+
+  - name: Cisco-Health-Check
+    ansible.controller.workflow_job_template_node:
+      identifier: Cisco-Health-Check
+      workflow: "Cisco-STIG-Remediation-Workflow"
+      unified_job_template: Cisco-Health-Check
+      organization: "Red Hat network organization"
+      state: present
+      validate_certs: false
+      controller_host: "{{host}}"
+      controller_username: "{{username}}"
+      controller_password: "{{password}}"
+
+  - name: Cisco-BGP-Check
+    ansible.controller.workflow_job_template_node:
+      identifier: Cisco-BGP-Check
+      workflow: "Cisco-STIG-Remediation-Workflow"
+      unified_job_template: Cisco-BGP-Check
+      organization: "Red Hat network organization"
+      state: present
+      success_nodes: Cisco-Health-Check
+      validate_certs: false
+      controller_host: "{{host}}"
+      controller_username: "{{username}}"
+      controller_password: "{{password}}"
+
+  
+  - name: Cisco-Stig-Compliance
+    ansible.controller.workflow_job_template_node:
+      identifier: Cisco-Stig-Compliance
+      workflow: "Cisco-STIG-Remediation-Workflow"
+      unified_job_template: Cisco-Stig
+      organization: "Red Hat network organization"
+      state: present
+      success_nodes:
+      - Cisco-BGP-Check
+      validate_certs: false
+      controller_host: "{{host}}"
+      controller_username: "{{username}}"
+      controller_password: "{{password}}"
+
+  - name: Rollback-Config
+    ansible.controller.workflow_job_template_node:
+      identifier: Rollback-Config
+      workflow: "Cisco-STIG-Remediation-Workflow"
+      unified_job_template: Cisco-Prepare-Env
+      organization: "Red Hat network organization"
+      state: present
+      validate_certs: false
+      controller_host: "{{host}}"
+      controller_username: "{{username}}"
+      controller_password: "{{password}}" 
+
+  - name: Cisco-Rtr4-Config
+    ansible.controller.workflow_job_template_node:
+      identifier: Cisco-Rtr4-Config
+      workflow: "Cisco-STIG-Remediation-Workflow"
+      unified_job_template: Cisco-Rtr4-Config
+      organization: "Red Hat network organization"
+      state: present
+      success_nodes:
+      - Cisco-Stig-Compliance
+      failure_nodes:
+      - Rollback-Config
+      validate_certs: false
+      controller_host: "{{host}}"
+      controller_username: "{{username}}"
+      controller_password: "{{password}}"
+
+
