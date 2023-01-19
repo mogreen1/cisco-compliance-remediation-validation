@@ -1,0 +1,17 @@
+
+
+interface Loopback0
+ ip address {{ router_id }} 255.255.255.255
+!
+interface Tunnel0
+ ip address {{ tunnel0_ip }} 255.255.255.0
+ ip mtu 1476
+ ip tcp adjust-mss 1360
+ ip ospf network point-to-point
+ ip ospf 1 area 0.0.0.0
+ tunnel source GigabitEthernet1
+ tunnel destination {{ hostvars[core]['private_ip'] }}
+!
+router ospf 1
+ router-id {{ router_id }}
+ redistribute connected subnets

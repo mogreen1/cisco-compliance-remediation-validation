@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+<h1>Router Dashboard Report</h1>
+<table>
+    <thead>
+        <tr>
+            <th>Hostname</th>
+            <th>Model Type</th>
+            <th>IOS Type</th>
+            <th>Serial Number</th>
+            <th>Memory Total</th>
+            <th>Free Memory</th>
+            <th>Code Version</th>
+        </tr>
+    </thead>
+    <tbody>
+{% for network_switch in groups['cisco_only'] %}
+        <tr>
+            <td>{{hostvars[network_switch]['ansible_net_hostname']}}</td>
+            <td>{{hostvars[network_switch]['ansible_net_model']}}</td>
+            <td>{{hostvars[network_switch]['ansible_net_iostype']}}</td>
+            <td>{{hostvars[network_switch]['ansible_net_serialnum']}}</td>
+            <td>{{hostvars[network_switch]['ansible_net_memtotal_mb']}}</td>
+            <td>{{hostvars[network_switch]['ansible_net_memfree_mb']}}</td>
+            <td {% if hostvars[network_switch]['ansible_net_version'] != desired_ios_version %}style="background:yellow;"{% endif %}>{{hostvars[network_switch]['ansible_net_version']}}</td>
+        </tr>
+{% endfor %}
+    </tbody>
+    </table>
+
+<p style="color:red;">Desired IOS Version: {{desired_ios_version}}</p>
+
+<table>
+    <thead>
+        <tr>
+            <th>Hostname</th>
+            <th>Interface</th>
+            <th>Address</th>
+            <th>Description</th>
+            <th>Status</th>
+            <th>In Rate</th>
+            <th>Out Rate</th>
+            <th>In Packets</th>
+            <th>Out Packets</th>
+            <th>In Octets</th>
+            <th>Out Octets</th>
+            <th>In Errors</th>
+            <th>Out Errors</th>
+            <th>In CRC Errors</th>
+            
+
+
+
+        </tr>
+    </thead>
+    <tbody>
+{% for network_switch in groups['cisco_only'] %}
+        <tr>
+            <td>{{hostvars[network_switch]['ansible_net_hostname']}}</td>
+            <td>GigabitEthernet1</td>  
+            <td>{{hostvars[network_switch]['ansible_net_interfaces']['GigabitEthernet1']['ipv4'][0]['address']}}</td>
+            <td>{{hostvars[network_switch]['ansible_net_interfaces']['GigabitEthernet1']['description']}}</td>
+            <td>{{hostvars[network_switch]['ansible_net_interfaces']['GigabitEthernet1']['lineprotocol']}}</td>
+            <td>{{hostvars[network_switch]['structured']['parsed']['GigabitEthernet1']['counters']['rate']['in_rate']}}</td>
+            <td>{{hostvars[network_switch]['structured']['parsed']['GigabitEthernet1']['counters']['rate']['out_rate']}}</td>
+            <td>{{hostvars[network_switch]['structured']['parsed']['GigabitEthernet1']['counters']['in_pkts']}}</td>
+            <td>{{hostvars[network_switch]['structured']['parsed']['GigabitEthernet1']['counters']['out_pkts']}}</td>
+            <td>{{hostvars[network_switch]['structured']['parsed']['GigabitEthernet1']['counters']['in_octets']}}</td>
+            <td>{{hostvars[network_switch]['structured']['parsed']['GigabitEthernet1']['counters']['out_octets']}}</td>
+            <td>{{hostvars[network_switch]['structured']['parsed']['GigabitEthernet1']['counters']['in_errors']}}</td>
+            <td>{{hostvars[network_switch]['structured']['parsed']['GigabitEthernet1']['counters']['out_errors']}}</td>
+            <td>{{hostvars[network_switch]['structured']['parsed']['GigabitEthernet1']['counters']['in_crc_errors']}}</td>
+           
+
+        </tr>
+        {% endfor %}
+    </tbody>
+    </table>
+</body>
+</html>
+

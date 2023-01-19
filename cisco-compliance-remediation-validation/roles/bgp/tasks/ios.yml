@@ -1,0 +1,18 @@
+---
+- name: Add "{{rtr}}" network to BGP
+  cisco.ios.ios_bgp_address_family:
+    config:
+      as_number: "{{as_num}}"
+      address_family:
+        - afi: ipv4
+          network:
+            - address: "{{router_id}}"
+              mask: 255.255.255.255
+    state: merged
+  register: diff
+  
+
+- name: Show the difference in json format
+  ansible.utils.fact_diff:
+    before: "{{ diff.before }}"
+    after: "{{ diff.after }}"

@@ -1,0 +1,25 @@
+---
+# R-215838 CISC-ND-001030
+# Replace ntp servers' IP address before enabling
+- name: include ntp server vars
+  include_vars:
+    file: "../ssot/stig.yml"
+
+- name: stigrule_215838_ntp_server_1 + server2
+  cisco.ios.ios_ntp_global:
+    config: 
+      servers:
+        - server: "{{ iosxeSTIG_stigrule_215838_ntp_server_1_Server }}"
+        - server: "{{ iosxeSTIG_stigrule_215838_ntp_server_2_Server }}"
+    state: replaced
+  when: iosxeSTIG_stigrule_215838_Manage
+  check_mode: "{{ check }}"
+  register: diff
+    
+- name: Show the difference in json format
+  when: diff.changed
+  ansible.utils.fact_diff:
+    before: "{{ diff.before }}"
+    after: "{{ diff.after }}"
+  ignore_errors: yes
+

@@ -1,0 +1,14 @@
+---
+- name: Jinja2 IOS template to configure the remainder of the remote router
+  cisco.ios.ios_config:
+    src: ../templates/remote.j2
+    diff_against: running
+
+- name: Configure NTP Configs
+  cisco.ios.config:
+    commands:
+      - ntp server {{ ntp_item }}
+    diff_against: running
+  loop: "{{ntp_servers}}"
+  loop_control:
+    loop_var: ntp_item

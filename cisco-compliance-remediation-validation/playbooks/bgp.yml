@@ -1,0 +1,50 @@
+---
+- name: BGP for '{{rtr}}'
+  hosts: core
+  gather_facts: false
+
+  vars:
+    as_num: 65001
+
+  tasks:
+    - name: Confirm conectivity to Core
+      block:
+        - name: Check BGP
+          cisco.ios.ios_bgp_address_family:
+            state: gathered
+          register: networks
+
+        - name: Print BGP IPv4 info
+          when: inventory_hostname == core
+          debug:
+            var: networks.gathered.address_family[0].network
+
+        - name: querry "{{ rtr }}" network
+          when: inventory_hostname == core
+          set_fact:
+            network: "{{ networks.gathered.address_family[0].network | to_json | from_json | json_query(server_name_query) }}"
+          vars:
+            server_name_query: "[?contains(address,'{{router_id}}')]"
+
+        - name: Display "{{ rtr }}" network
+          when: inventory_hostname == core
+          ansible.builtin.debug:
+            var: network
+
+        - name: Assert that {{router_id}} exists
+          when: inventory_hostname == core
+          assert:
+            that: "'{{router_id}}' in network[0].address"
+            fail_msg: " {{router_id}} is not present.  You must remediate the BGP config"
+            success_msg: " {{router_id}} is present!"
+
+      rescue:
+        - name: Print when errors
+          ansible.builtin.debug:
+            msg: "I caught an error, {{router_id}} does not exist on {{core}}!"
+
+        - name: load bgp role
+          when: check != 'yes'
+          include_role:
+            name: ../roles/bgp
+          
